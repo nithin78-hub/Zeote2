@@ -1,0 +1,81 @@
+/* Main Styles */
+body {
+    padding-bottom: 70px;
+}
+
+/* Status Icons */
+.status-icon {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    font-size: 24px;
+    border-radius: 50%;
+}
+
+.status-running {
+    background-color: #ffc107;
+    color: #212529;
+    animation: spin 1.5s linear infinite;
+}
+
+.status-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-error {
+    background-color: #dc3545;
+    color: white;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Column list styles */
+.column-item {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.column-item:hover {
+    background-color: #e9ecef;
+}
+
+.column-type {
+    font-size: 0.8rem;
+    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+/* Preview table scrolling */
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Clickhouse and Flatfile config sections */
+.clickhouse-config, .flatfile-config {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    height: 100%;
+}
+
+.clickhouse-config {
+    border-left: 4px solid #007bff;
+}
+
+.flatfile-config {
+    border-left: 4px solid #28a745;
+}

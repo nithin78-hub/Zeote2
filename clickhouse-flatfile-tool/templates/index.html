@@ -1,0 +1,223 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickHouse & Flat File Data Ingestion Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">ClickHouse & Flat File Data Ingestion Tool</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Data Ingestion Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Source Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select Source and Target</label>
+                            <div class="d-flex">
+                                <div class="form-check me-4">
+                                    <input class="form-check-input" type="radio" name="ingestionDirection" id="clickhouseToFlatfile" value="clickhouse-to-flatfile" checked>
+                                    <label class="form-check-label" for="clickhouseToFlatfile">
+                                        ClickHouse → Flat File
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ingestionDirection" id="flatfileToClickhouse" value="flatfile-to-clickhouse">
+                                    <label class="form-check-label" for="flatfileToClickhouse">
+                                        Flat File → ClickHouse
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- ClickHouse Configuration Section -->
+                            <div class="col-md-6">
+                                <div class="clickhouse-config">
+                                    <h5 class="ch-source-title">ClickHouse Source</h5>
+                                    <div class="mb-3">
+                                        <label for="chHost" class="form-label">Host</label>
+                                        <input type="text" class="form-control" id="chHost" placeholder="localhost">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="chPort" class="form-label">Port</label>
+                                        <input type="text" class="form-control" id="chPort" placeholder="9000">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="chDatabase" class="form-label">Database</label>
+                                        <input type="text" class="form-control" id="chDatabase" placeholder="default">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="chUser" class="form-label">User</label>
+                                        <input type="text" class="form-control" id="chUser" placeholder="default">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="chJwtToken" class="form-label">JWT Token (Optional)</label>
+                                        <input type="password" class="form-control" id="chJwtToken">
+                                    </div>
+                                    <div class="d-grid">
+                                        <button id="connectClickhouse" class="btn btn-primary">Connect</button>
+                                    </div>
+
+                                    <!-- Table Selection (Initially Hidden) -->
+                                    <div id="tableSelection" class="mt-4 d-none">
+                                        <div class="mb-3">
+                                            <label for="chTable" class="form-label">Select Table</label>
+                                            <select class="form-select" id="chTable">
+                                                <option value="">-- Select Table --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Join Configuration (Initially Hidden) -->
+                                    <div id="joinTableSection" class="mt-4 d-none">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="enableJoin">
+                                            <label class="form-check-label" for="enableJoin">
+                                                Enable Join
+                                            </label>
+                                        </div>
+                                        <div id="joinConfiguration" class="d-none">
+                                            <div class="mb-3">
+                                                <label for="joinTables" class="form-label">Join Tables</label>
+                                                <select class="form-select" id="joinTables" multiple size="3">
+                                                    <!-- Will be populated dynamically -->
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="joinConditions" class="form-label">Join Conditions</label>
+                                                <textarea class="form-control" id="joinConditions" rows="3" placeholder="base_table.id = join_table.id"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ClickHouse Target Configuration (Initially Hidden) -->
+                                <div id="clickhouseTarget" class="clickhouse-config mt-4 d-none">
+                                    <h5>ClickHouse Target Configuration</h5>
+                                    <div class="mb-3">
+                                        <label for="targetTable" class="form-label">Target Table Name</label>
+                                        <input type="text" class="form-control" id="targetTable">
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="createTableIfNotExists" checked>
+                                        <label class="form-check-label" for="createTableIfNotExists">
+                                            Create table if not exists
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Flat File Configuration Section -->
+                            <div class="col-md-6">
+                                <!-- Flat File Source Configuration (Initially Hidden) -->
+                                <div id="flatFileSource" class="flatfile-config d-none">
+                                    <h5 class="ff-target-title">Flat File Source</h5>
+                                    <div class="mb-3">
+                                        <label for="inputFile" class="form-label">Upload File</label>
+                                        <input class="form-control" type="file" id="inputFile">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="inputDelimiter" class="form-label">Delimiter</label>
+                                        <input type="text" class="form-control" id="inputDelimiter" value="," placeholder="Default: comma (,)">
+                                    </div>
+                                    <div class="d-grid">
+                                        <button id="uploadFlatFile" class="btn btn-success">Upload & Parse</button>
+                                    </div>
+                                </div>
+
+                                <!-- Flat File Target Configuration -->
+                                <div id="flatFileTarget" class="flatfile-config">
+                                    <h5 class="ff-target-title">Flat File Target</h5>
+                                    <div class="mb-3">
+                                        <label for="outputFilename" class="form-label">Output Filename</label>
+                                        <input type="text" class="form-control" id="outputFilename" placeholder="export.csv">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="outputFormat" class="form-label">Delimiter</label>
+                                        <input type="text" class="form-control" id="outputFormat" value="," placeholder="Default: comma (,)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Section -->
+                        <div class="row mt-4">
+                            <div class="col">
+                                <div class="alert alert-info" id="statusMessage">Ready to configure</div>
+                                <div class="progress">
+                                    <div id="statusProgress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column Selection Card (Initially Hidden) -->
+                <div id="columnSelectionWrapper" class="card mt-4 d-none">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Column Selection</h5>
+                        <div>
+                            <span class="badge bg-primary" id="selectedColumnsCount">0</span> columns selected
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button id="selectAllColumns" class="btn btn-sm btn-outline-primary me-2">Select All</button>
+                            <button id="deselectAllColumns" class="btn btn-sm btn-outline-secondary">Deselect All</button>
+                        </div>
+                        <div id="columnList" class="mt-3">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="previewData" class="btn btn-primary" disabled>Preview Data</button>
+                    </div>
+                </div>
+
+                <!-- Preview Section (Initially Hidden) -->
+                <div id="previewSection" class="card mt-4 d-none">
+                    <div class="card-header">
+                        <h5>Data Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="previewStatus" class="mb-3"></div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead id="previewTable">
+                                    <!-- Will be populated dynamically -->
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="startIngestion" class="btn btn-success" disabled>Start Ingestion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer bg-light mt-5 py-3">
+        <div class="container text-center">
+            <span class="text-muted">ClickHouse & Flat File Data Ingestion Tool</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+```
